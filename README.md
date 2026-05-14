@@ -70,7 +70,8 @@ The right panel is tabbed across 2D exports, 3D viewers and pipelines, metrology
 
 **2D Renders**
 
-<img src="docs/screenshots/right_panel_2d_exports.png width="20%">
+<img src="docs/screenshots/right_panel_2d_exports.png" width="20%">
+
 
 Full-resolution TIFF of the current view, snapshot of all engines at once, WebRTI browser viewer, DeepZoom gigapixel viewer, and the publication sheet builder with preset layouts for different object types.
 
@@ -82,19 +83,19 @@ Full-resolution TIFF of the current view, snapshot of all engines at once, WebRT
 
 **Metrology**
 
-<img src="docs/screenshots/right_panel_metrology.png width="20%">
+<img src="docs/screenshots/right_panel_metrology.png" width="20%">
 
 ISO 25178 areal roughness (Sa, Sq, Sz), ISO 4287 profile roughness from any drawn cross-section, physical scale calibration via scale bar and Z-reference, dome coverage scoring, and normal QC reports.
 
 **Archive and metadata**
 
-<img src="docs/screenshots/right_panel_archive.png width="20%">
+<img src="docs/screenshots/right_panel_archive.png" width="20%">
 
 CIDOC-CRM JSON-LD, IIIF 3.0 manifest, LIDO XML, Dublin Core TIFF embed, Zenodo deposit package, MorphoSource package, Heritage Archive ZIP, and a full processing provenance log.
 
 **AI tools**
 
-<img src="docs/screenshots/right_panel_ai_tools.png width="20%">
+<img src="docs/screenshots/right_panel_ai_tools.png" width="20%">
 
 Claude API integration for surface analysis, condition reports, and figure captions. Neural PS training for recurring material types. Requires an Anthropic API key and optionally PyTorch.
 
