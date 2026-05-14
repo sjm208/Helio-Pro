@@ -1,0 +1,54 @@
+# HELIO Pro — .gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+dist/
+build/
+
+# Log files (generated at runtime)
+helio_pro.log
+*.log
+
+# HELIO session files (contain full arrays — too large for git)
+*.helio
+
+# Output folders
+Output/
+outputs/
+*_OUTPUTS/
+*_outputs/
+
+# Trained neural models
+*.pt
+*.pth
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+
+# Windows
+Thumbs.db
+Desktop.ini
+
+# Large test images (add your own exclusions as needed)
+# *.tif
+# *.tiff
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# IDEs
+.vscode/
+.idea/
+*.swp
