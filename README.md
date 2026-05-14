@@ -40,11 +40,11 @@ I come from a hobbyist background — Arduino programming in C++, with Python re
 
 The interface is split into a left panel for capture setup and light calibration, a central viewport with interactive relighting, and a right panel for analysis, export, and metrology.
 
-![Left panel — data and engine controls](docs/screenshots/left_panel_engines.png)
+<img src="docs/screenshots/left_panel_engines.png" width="20%">
 
 40+ render engines cover photometric and spectral analysis. Drag the dome control in the left panel to relight in real time. The A/B wipe slider lets you compare any two engines side by side.
 
-![Left panel — lighting controls](docs/screenshots/left_panel_lighting.png)
+<img src="docs/screenshots/left_panel_lighting.png width="20%">
 
 Light calibration sits in the left panel: chrome sphere auto-detection, a 10-tool virtual dome calibrator for rigs without a sphere, direct `.lp` file import from RTIBuilder or dome controllers.
 
@@ -70,7 +70,7 @@ The right panel is tabbed across 2D exports, 3D viewers and pipelines, metrology
 
 **2D Renders**
 
-![2D exports panel](docs/screenshots/right_panel_2d_exports.png)
+<img src="docs/screenshots/right_panel_2d_exports.png width="20%">
 
 Full-resolution TIFF of the current view, snapshot of all engines at once, WebRTI browser viewer, DeepZoom gigapixel viewer, and the publication sheet builder with preset layouts for different object types.
 
@@ -82,19 +82,19 @@ Full-resolution TIFF of the current view, snapshot of all engines at once, WebRT
 
 **Metrology**
 
-![Metrology panel](docs/screenshots/right_panel_metrology.png)
+<img src="docs/screenshots/right_panel_metrology.png width="20%">
 
 ISO 25178 areal roughness (Sa, Sq, Sz), ISO 4287 profile roughness from any drawn cross-section, physical scale calibration via scale bar and Z-reference, dome coverage scoring, and normal QC reports.
 
 **Archive and metadata**
 
-![Archive panel](docs/screenshots/right_panel_archive.png)
+<img src="docs/screenshots/right_panel_archive.png width="20%">
 
 CIDOC-CRM JSON-LD, IIIF 3.0 manifest, LIDO XML, Dublin Core TIFF embed, Zenodo deposit package, MorphoSource package, Heritage Archive ZIP, and a full processing provenance log.
 
 **AI tools**
 
-![AI tools panel](docs/screenshots/right_panel_ai_tools.png)
+<img src="docs/screenshots/right_panel_ai_tools.png width="20%">
 
 Claude API integration for surface analysis, condition reports, and figure captions. Neural PS training for recurring material types. Requires an Anthropic API key and optionally PyTorch.
 
