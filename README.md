@@ -32,6 +32,8 @@ If you use it in published research, a citation or acknowledgement is appreciate
 
 I come from a hobbyist background — Arduino programming in C++, with Python relatively new to me. [Claude AI](https://www.anthropic.com) (Anthropic) served as the development partner that made the transition possible. The imaging concepts, domain knowledge, and research direction are entirely my own. This is mentioned as an honest account of how the project came together, and because it might be useful to others in similar positions.
 
+The code doesn't strictly follow PEP 8 in all areas — the style is dense in places and prioritises brevity over convention. That's not what this project was aiming for.
+
 ---
 
 ## What it does
@@ -44,7 +46,7 @@ The interface is split into a left panel for capture setup and light calibration
 
 40+ render engines cover photometric and spectral analysis. Drag the dome control in the left panel to relight in real time. The A/B wipe slider lets you compare any two engines side by side.
 
-<img src="docs/screenshots/left_panel_lighting.png width="20%">
+<img src="docs/screenshots/left_panel_lighting.png" width="20%">
 
 Light calibration sits in the left panel: chrome sphere auto-detection, a 10-tool virtual dome calibrator for rigs without a sphere, direct `.lp` file import from RTIBuilder or dome controllers.
 
