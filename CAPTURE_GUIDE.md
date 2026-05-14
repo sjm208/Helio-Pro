@@ -1,205 +1,26 @@
-# HELIO Pro — Capture Guide
-
-*How to photograph objects for photometric stereo*
-
----
-
-## The Core Principle
-
-Photometric stereo needs **the same scene lit from different directions**. Everything else stays identical:
-
-```
-FIXED:   camera position · focus · aperture · ISO · subject
-VARIES:  light direction (one shot per position)
-```
-
-Minimum: **4 light positions** → basic normal map  
-Recommended: **8–16 positions** → publication quality  
-Archival: **32–64 positions** → full RTI / museum archive  
-
----
-
-## Method 1 — RTI Dome
-
-The most accurate method. A hemisphere of LEDs fires one at a time.
-
-```
-         ╔═══════════════════════╗
-        ╔╝  RTI Dome (top view)  ╚╗
-       ╔╝                         ╚╗
-      ║  ●  ●  ●  ●  ●  ●  ●  ●   ║   ← LEDs fire one at a time
-      ║  ●           ●  ●          ║
-      ║  ●   SUBJECT   ●           ║   ← object on flat surface
-      ║  ●  (chrome sphere nearby) ║   ← chrome ball for calibration
-       ╚╗                         ╔╝
-        ╚╗                       ╔╝
-         ╚═══════════════════════╝
-              ▲ camera hole at top
-```
-
-**Setup checklist:**
-- [ ] Object flat on the baseboard
-- [ ] Chrome sphere (≥25mm) visible in every frame
-- [ ] Camera tethered — shoots automatically with each LED
-- [ ] Exposure locked (Manual mode)
-- [ ] One image per LED firing
-
-**HELIO calibration:** Step 1B → Sphere Sync → draw circle on sphere → Accept
-
----
-
-## Method 2 — Handheld Flash or Torch
-
-No dome required. Move the light to 8–16 positions around the object.
-
-```
-   Top view of positions:
-
-        N
-    NW  ↑  NE
-      \ | /
-   W ─── ─── E      ← light positions
-      / | \
-    SW  ↓  SE
-        S
-
-   Side view:
-
-        [camera overhead, fixed]
-               │
-    ┌──────────▼──────────┐
-    │      SUBJECT        │   ← flat on table
-    └─────────────────────┘
-       ↗   ↑   ↑   ↑   ↖
-      30°–60° elevation above table
-```
-
-**Tips:**
-- Mark positions on the table with tape — be consistent
-- Use the same flash power (or torch distance) every shot
-- Lock focus before the first shot — do not touch the camera between shots
-- Cover the room windows or shoot at night — ambient light causes errors
-- Diffuse the light slightly for matte surfaces (tissue over torch)
-
-**HELIO calibration:** Step 1C → Virtual Dome Calibrator → enter positions  
-*Or:* AI Light Estimation (Step 1C → AI Estimate) as a last resort
-
----
-
-## Method 3 — Fixed Spider Rig
-
-Multiple fixed lights around a copy stand, firing individually.
-
-```
-         Light 3  (N)
-              ●
-             /
-Light 2 ●───────────● Light 4
-   (NW)  \    CAMERA   /  (NE)
-          \      │    /
-           \     │   /
-    ┌───────────────────────┐
-    │      BASEBOARD        │   ← subject here
-    └───────────────────────┘
-           /     │   \
-          /      │    \
-Light 8 ●        │     ● Light 5
-              Light 6 (S)
-```
-
-**Advantages:**
-- Nothing moves between shots — most consistent geometry
-- Controller fires each LED in sequence automatically
-- Export `.lp` file from controller software → import into HELIO
-
-**HELIO calibration:**  
-If you have a `.lp` file from your controller: Step 1C → Import .lp File  
-If calibrating for the first time: Step 1B → Sphere Sync
-
----
-
-## Exposure Settings
-
-| Setting | Recommended |
-|---------|-------------|
-| Mode | Manual (M) |
-| ISO | 100–200 (lowest native ISO) |
-| Aperture | f/8–f/11 (sharpest zone, maximum depth of field) |
-| Shutter | 1/125s (or flash sync speed) |
-| White balance | Kelvin fixed (e.g. 5500K) or Custom white balance |
-| Focus | Manual — lock before first shot |
-| Stabilisation | Off (camera on tripod) |
-| File format | RAW → export 16-bit TIFF, or JPEG at quality 95+ |
-
----
-
-## Camera Positioning
-
-```
-   Ideal: camera directly overhead (0° tilt)
-
-        Camera
-          │  ← straight down
-          │
-          ▼
-   ┌─────────────┐
-   │   SUBJECT   │   ← parallel to sensor plane
-
-   Acceptable: up to 10° tilt if subject fills the frame
-
-   Avoid: steep angles — causes foreshortening in the depth map
-```
-
----
-
-## Subject Preparation
-
-**Flat objects (manuscripts, prints, documents):**
-- Use a suction mount or book cradle to keep the surface truly flat
-- A 1mm bow across a 300mm page causes measurable depth error
-
-**Coins and medals:**
-- Mount obverse and reverse separately
-- Use Plasticine or a ring mount to hold at exactly 0° tilt
-
-**3D objects (ceramics, carvings):**
-- PS works on relatively flat surfaces — max useful relief ~10–20% of object diameter
-- For deeply 3D objects, consider photogrammetry instead
-
-**Chrome sphere:**
-- Diameter: 25–50mm is ideal (larger is easier to detect)
-- Position: corner of frame, on the same plane as the object
-- Keep sphere in every single shot — removing it between shots loses calibration
-
----
-
-## Common Mistakes
-
-| Mistake | Effect | Fix |
-|---------|--------|-----|
-| Camera moved between shots | Blur, double edges | Use a tripod with locking head |
-| Inconsistent exposure | Noisy normals | Lock Manual mode, check histogram |
-| Object moved | Misregistered normal map | Use suction pad or heavy weight |
-| Shadows from stand/hands | Dark patches in normal map | Stand well back, use long cable release |
-| Too few light positions | Noisy or flat-looking normals | Minimum 8, prefer 16+ |
-| Dome too close to object | Near-field error (dark edges) | Tick Near-Field Correction in HELIO |
-| Specular hot spots | Blown-out patches | Use IRLS or Robust LS solver |
-
----
-
-## Importing into HELIO Pro
-
-### From RTIBuilder / Relight
-1. Left panel → **📂 Import RTI Project Folder**
-2. Select the folder containing your `.lp` file and images
-3. HELIO matches images to light vectors automatically
-4. Click **LOAD SCANS & PROCESS**
-
-### From scratch (new capture)
-1. Left panel → **Load Images** → select all photos
-2. Step 1B (sphere in frame) **or** Step 1C (manual/rig)
-3. Click **LOAD SCANS & PROCESS**
-
----
-
-*Part of the HELIO Pro documentation suite — https://github.com/sjm208/Helio-Pro*
+HELIO Pro — Capture GuideOptimal photographic workflows for photometric stereo and RTI.1. The Core PrinciplePhotometric stereo relies on a single, strict rule: The scene must remain entirely static while the light source changes direction.Every variable in the optical chain remains fixed. Only the angle of illumination changes per exposure.The Capture MatrixFIXED: Camera position · Focus · Aperture · ISO · SubjectVARIES: Light direction (One image captured per light position)4 Light Positions: Minimum requirement (basic normal map generation).8–16 Positions: Recommended for publication-quality surface reconstruction.32–64 Positions: Archival standard (full RTI / museum-grade archive).2. Capture MethodsMethod A: The RTI DomeThe most precise and automated method. A hemisphere array of LEDs fires sequentially, perfectly mapped to the subject. The camera is positioned directly overhead, looking down through the top of the dome at the subject and calibration sphere.Code snippetgraph TD
+    subgraph Dome Illumination
+        L1((LED 1)) -.-> S
+        L2((LED 2)) -.-> S
+        L3((LED 3)) -.-> S
+        L4((LED N...)) -.-> S
+    end
+    C[Camera] -->|Overhead / Fixed| S[Subject + Calibration Sphere]
+    style C fill:#2b2d42,stroke:#edf2f4,stroke-width:2px,color:#fff
+    style S fill:#8d99ae,stroke:#2b2d42,stroke-width:2px,color:#fff
+Setup Checklist:[ ] Subject secured flat on the baseboard.[ ] Chrome calibration sphere placed on the same plane, visible in every frame.[ ] Camera tethered for automated firing synced with the LED array.[ ] Exposure locked (Manual Mode).HELIO Calibration: Step 1B → Sphere Sync → Draw circle on sphere → AcceptMethod B: Handheld Flash or TorchA flexible, dome-free approach. The light source is manually moved to 8–16 distinct positions around the object, maintaining an elevation of 30°–60° above the table.Code snippetgraph TD
+    NW((NW)) --> S
+    N((N)) --> S
+    NE((NE)) --> S
+    W((W)) --> S((SUBJECT))
+    E((E)) --> S
+    SW((SW)) --> S
+    S_light((S)) --> S
+    SE((SE)) --> S
+    
+    style S fill:#8d99ae,stroke:#2b2d42,stroke-width:2px,color:#fff
+Pro-Tips:Mark your 8–16 positions on the table with tape to ensure consistent spacing.Cover windows and eliminate ambient room light; stray light introduces severe vector errors.Maintain the exact same flash power or torch distance for every shot.HELIO Calibration:If you shot with a chrome sphere: Step 1B → Sphere SyncIf you shot without a sphere: Step 1C → Virtual Dome Calibrator → Enter positions (Alternatively: Use AI Light Estimation as a fallback).Method C: Fixed Spider RigA hybrid approach using multiple fixed lights mounted around a copy stand. This is highly effective whether using a commercial solution or a custom 8-LED DIY system.Advantages:Absolute geometric consistency; nothing physically moves during the capture sequence.Ideal for batch processing and automated controller sequences.Allows the use of predefined .lp (light position) files.HELIO Calibration:With controller file: Step 1C → Import .lp FileFirst-time rig calibration: Step 1B → Sphere Sync3. Exposure & Camera SpecificationsConsistency is more important than absolute brightness. Ensure your camera is completely locked down.SettingRecommendationModeManual (M)ISOBase native ISO (e.g., 100 or 200) for minimum noise.Aperturef/8 – f/11 (Maximum sharpness and sufficient depth of field).Shutter1/125s (Or your specific flash sync speed).White BalanceFixed Kelvin (e.g., 5500K) or a Custom Preset. Never Auto.FocusManual — lock focus precisely before the first exposure.StabilisationOFF (OIS/IBIS can cause micro-shifts on a tripod).File FormatRAW → Export as 16-bit TIFF (especially critical when resolving fine, drypoint details with high-resolution sensors like a Phase One 100 Megapixel back).4. Geometric AlignmentTo prevent depth map foreshortening, the camera sensor must be perfectly parallel to the subject surface.Code snippetgraph LR
+    C[Camera Sensor Plane] <==>|0° Tilt / Perfectly Parallel| S[Subject Plane]
+    style C fill:#2b2d42,stroke:#edf2f4,stroke-width:2px,color:#fff
+    style S fill:#8d99ae,stroke:#2b2d42,stroke-width:2px,color:#fff
+Ideal: Camera directly overhead, 0° tilt.Acceptable: Up to 10° tilt if the subject fills the frame.Avoid: Steep angles.5. Subject PreparationFlat Objects (Historical Manuscripts, Prints, Copper Plates):Use a suction mount, vacuum table, or specialized book cradle to keep the surface entirely flat.Note: Even a 1mm bow across a 300mm document will introduce measurable topological errors in the final depth map.Coins and Medals:Mount obverse and reverse separately.Use dark Plasticine or a bespoke 3D-printed ring mount to hold the coin at exactly a 0° tilt.3D Objects (Ceramics, Carvings):Photometric stereo excels on low-relief surfaces (maximum useful relief is ~10–20% of the object's diameter).For highly dimensional or deep 3D objects, cross-polarised photogrammetry is recommended instead.The Chrome Sphere (If applicable):Placement: Must sit on the exact same plane as the object surface, typically in the corner of the frame.Rule: Never remove or bump the sphere mid-sequence.6. Troubleshooting Common Capture ErrorsVisual Artifact in HELIOLikely CauseThe FixBlur / Double EdgesCamera moved between shots.Use a heavier tripod, tighten the head, use a cable release.Noisy / Grainy NormalsInconsistent exposure or Auto-ISO.Lock camera to full Manual. Check histograms.Misregistered MapsObject shifted during capture.Secure object with mounts or weights.Dark PatchesShadows from stands or your hands.Step further back during exposure.Flat-looking NormalsInsufficient light angles.Increase capture count (Minimum 8, ideally 16+).Dark Edges (Vignette)Light source was too close to subject.Tick Near-Field Correction in HELIO.Blown-out PatchesSpecular hot spots from bare LEDs.Use IRLS or Robust LS solver in HELIO.7. Importing into HELIO ProTip: If you are processing a massive backlog of map or manuscript classmarks, utilizing custom AppleScripts to automate and organize your folder structures beforehand will save significant time during the import phase.Method A: From RTIBuilder / Relight FoldersNavigate to the left panel → 📂 Import RTI Project FolderSelect the parent directory containing your .lp file and the corresponding image sequence.HELIO will automatically parse and match the images to the light vectors.Click LOAD SCANS & PROCESS.Method B: From Scratch (New Custom Capture)If you are not importing a pre-existing RTI folder, you need to manually load your images and define your light sources.Navigate to the left panel → Load Images and select your entire photo sequence.Define the Light Vectors: Choose your calibration path:Step 1B (Sphere Sync): Use this if you included a chrome calibration sphere. Draw a UI circle around the sphere, and HELIO will calculate the light angles automatically.Step 1C (Virtual Dome / Manual Array): Use this if you did not use a sphere (e.g., handheld torch). You will manually input the angles for each light position into the interface.Click LOAD SCANS & PROCESS.
