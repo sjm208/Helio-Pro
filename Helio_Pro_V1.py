@@ -366,7 +366,8 @@ class ToolTip(object):
     def enter(self, event=None):
         try:
             if self.widget.cget("state") == "disabled": return
-        except: pass
+        except Exception:
+            pass
         self.schedule()
 
     def leave(self, event=None):
@@ -435,7 +436,7 @@ def headless_render_worker(verts, faces, colors, out_path, bg_color='#ffffff', e
 
 def estimate_light_from_specular(cx, cy, r, hx, hy):
     nx = (hx - cx) / r
-    ny = (cy - hy) / r 
+    ny = (cy - hy) / r
     nz = np.sqrt(max(0, 1 - nx**2 - ny**2))
     return np.array([2*nz*nx, 2*nz*ny, 2*nz**2 - 1])
 
@@ -555,7 +556,7 @@ def _extract_highlight_robust(roi_masked, cx_local, cy_local, r,
 
 def photometric_stereo_pca(I_flat, use_torch=False, device=None):
     """Uncalibrated photometric stereo via SVD decomposition.
-    
+
     When use_torch=True and a device is provided, uses torch.linalg.svd which
     runs on MPS (Apple Silicon) or CUDA giving 3-5x speedup over NumPy SVD.
     Falls back to NumPy automatically if torch SVD fails.
@@ -639,8 +640,8 @@ def process_in_patches_sota(model, images_tensor, patch_size=256, overlap=32):
     weight_map = torch.zeros((B, 1, H, W), device=device)
     global_lights_accum = torch.zeros((B, N, 3), device=device)
     patch_count = 0
-    window_2d = (torch.hann_window(patch_size, device=device).unsqueeze(1) * torch.hann_window(patch_size, device=device).unsqueeze(0)).unsqueeze(0).unsqueeze(0) 
-    
+    window_2d = (torch.hann_window(patch_size, device=device).unsqueeze(1) * torch.hann_window(patch_size, device=device).unsqueeze(0)).unsqueeze(0).unsqueeze(0)
+
     model.eval()
     with torch.no_grad():
         for y in range(0, H, stride):
@@ -662,7 +663,7 @@ def pytorch_fast_poisson_integration(normals_np):
     import torch
     device = torch.device('cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu'))
     n = torch.tensor(normals_np, dtype=torch.float32, device=device)
-    nx, ny, nz = n[..., 0], n[..., 1], torch.clamp(n[..., 2], min=1e-5) 
+    nx, ny, nz = n[..., 0], n[..., 1], torch.clamp(n[..., 2], min=1e-5)
     p, q = -nx / nz, -ny / nz
     H, W = p.shape
     dp_dx, dq_dy = torch.zeros_like(p), torch.zeros_like(q)
@@ -671,7 +672,7 @@ def pytorch_fast_poisson_integration(normals_np):
     div_pad = torch.nn.functional.pad(dp_dx + dq_dy, (0, W, 0, H), mode='constant', value=0.0)
     U, V = torch.meshgrid(torch.fft.fftfreq(div_pad.shape[0], device=device) * 2 * torch.pi, torch.fft.fftfreq(div_pad.shape[1], device=device) * 2 * torch.pi, indexing='ij')
     denom = U**2 + V**2; denom[0, 0] = 1.0
-    Z_fft = torch.fft.fft2(div_pad) / -denom; Z_fft[0, 0] = 0.0 
+    Z_fft = torch.fft.fft2(div_pad) / -denom; Z_fft[0, 0] = 0.0
     return torch.fft.ifft2(Z_fft).real[:p.shape[0], :p.shape[1]].cpu().numpy()
 
 def solve_near_field_normals(images, L_mat, h, w):
@@ -693,7 +694,7 @@ def poisson_solver(nx, ny):
     div_pad = np.pad(np.gradient(nx, axis=1) + np.gradient(ny, axis=0), ((0, nx.shape[0]), (0, nx.shape[1])), mode='symmetric')
     u, v = np.meshgrid(2 * np.pi * np.fft.fftfreq(div_pad.shape[1]), 2 * np.pi * np.fft.fftfreq(div_pad.shape[0]))
     denom = (u**2 + v**2); denom[0,0] = 1.0
-    z_hat = np.fft.fft2(div_pad) / -denom; z_hat[0,0] = 0.0 
+    z_hat = np.fft.fft2(div_pad) / -denom; z_hat[0,0] = 0.0
     return np.real(np.fft.ifft2(z_hat))[:nx.shape[0], :nx.shape[1]].astype(np.float32)
 
 
@@ -1408,7 +1409,7 @@ def run_opengl_viewer(img_rgb, raw_depth_full, raw_depth_hp, normal_map, shared)
     @canvas.events.mouse_double_click.connect
     def on_mouse_double_click(event):
         """Double-click: reset camera centre to origin and fit mesh in view.
-        
+
         When panning has moved the model off-screen, double-click brings it
         back by resetting camera.center to (0,0,0) and calling set_range().
         This is equivalent to pressing [R] but works with the mouse.
@@ -3493,7 +3494,7 @@ class SphereCalibrationWindow(ctk.CTkToplevel):
         self.geometry("1100x800")
         self.master_app = master
         self.img_paths = img_paths
-        self.grab_set(); self.focus_force() 
+        self.grab_set(); self.focus_force()
         img_bgr = cv2.imread(img_paths[0])
         self.h_orig, self.w_orig = img_bgr.shape[:2]
         self.img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
@@ -3508,15 +3509,15 @@ class SphereCalibrationWindow(ctk.CTkToplevel):
         left_panel.grid(row=0, column=0, sticky="nsew", padx=10, pady=10)
         ctk.CTkLabel(left_panel, text="Sphere Calibrator", font=("Arial", 16, "bold")).pack(pady=(10, 5))
         ctk.CTkLabel(left_panel, text="1. Click & drag circle.\n2. Drag red dot to move.\n\nKeys: Arrows to nudge, +/- for size", justify="left", text_color="cyan").pack(pady=10, padx=10)
-        
+
         self.exposure_slider = ctk.CTkSlider(left_panel, from_=0.1, to=3.0, command=self.on_exposure)
         self.exposure_slider.set(1.0); self.exposure_slider.pack(pady=5, padx=10)
         ToolTip(self.exposure_slider, "Adjust exposure to see the highlight clearly.")
-        
+
         self.zoom_slider = ctk.CTkSlider(left_panel, from_=1.0, to=6.0, command=self.on_zoom)
         self.zoom_slider.set(1.0); self.zoom_slider.pack(pady=5, padx=10)
         ToolTip(self.zoom_slider, "Zoom in on the calibration sphere.")
-        
+
         btn_confirm = ctk.CTkButton(left_panel, text="Confirm & Extract", fg_color="#2980b9", command=self.confirm)
         btn_confirm.pack(pady=(10, 4), padx=10, fill="x"); ToolTip(btn_confirm, "Confirm circle placement.")
 
@@ -3625,7 +3626,7 @@ class SphereCalibrationWindow(ctk.CTkToplevel):
     def on_press(self, event):
         x, y = self.canvas.canvasx(event.x), self.canvas.canvasy(event.y)
         cs = self.base_scale * self.zoom; ox, oy = x/cs, y/cs
-        if self.sphere_r > 0 and math.hypot(ox - self.sphere_cx, oy - self.sphere_cy) < (15 / cs): 
+        if self.sphere_r > 0 and math.hypot(ox - self.sphere_cx, oy - self.sphere_cy) < (15 / cs):
             self.mode = "move"; self.drag_offset_x, self.drag_offset_y = self.sphere_cx - ox, self.sphere_cy - oy
             return
         self.mode = "draw"; self.sphere_cx, self.sphere_cy, self.sphere_r = ox, oy, 0.0
@@ -3929,7 +3930,6 @@ class BatchSphereCalibrationWindow(ctk.CTkToplevel):
 
         import threading as _thr_sp
         _thr_sp.Thread(target=_extract, daemon=True).start()
-
 
 
 class BatchSphereROIWindow(ctk.CTkToplevel):
@@ -4521,16 +4521,16 @@ class RTIViewerPro(ctk.CTk):
                 try: self.shared_state['raise_3d'].value = 1
                 except Exception: pass
         self.bind('<FocusIn>', _on_main_focus)
-        
+
         self.normals_full = self.normals_robust = self.albedo_rgb_full = self.albedo_grey_full = self.roughness_full = None
         self.depth_poisson = self.depth_vis_p = self.depth_fc = self.depth_vis_fc = self.depth_normalised_full = None
-        self.ptm_coeffs = self.hsh_coeffs = self.median_img = self.spec_var = self.pca_full = None 
+        self.ptm_coeffs = self.hsh_coeffs = self.median_img = self.spec_var = self.pca_full = None
         self.confidence_map = None
         self.normals_proxy = self.normals_robust_proxy = self.depth_proxy_p = self.depth_proxy_fc = None
         self._slider_dragging = False   # True while a hillshade slider is being dragged
         self.albedo_proxy = self.ptm_proxy = self.median_proxy = self.roughness_proxy = None
         self.confidence_proxy = None
-        
+
         self.current_light = np.array([-0.5, 0.5, 0.707])
         self.mag_level, self.mag_size = 0.5, 350
         self.is_interacting = self.is_mag_locked = False
@@ -4543,7 +4543,7 @@ class RTIViewerPro(ctk.CTk):
         self.last_mouse_x = self.last_mouse_y = 0
         self.view_width = self.view_height = 1
         self.current_tk_image = None
-        
+
         self.is_profiling = self.is_calibrating = False
         self.profile_start = self.calib_start = self.overlay_id = self.crop_box = self.sel_rect = self.viewer_process = self.current_profile_data = self.drawn_scale_px = self.calculated_ppi = self.current_L_mat = None
         self._z_mm_per_unit = None
@@ -4557,7 +4557,7 @@ class RTIViewerPro(ctk.CTk):
         self.crop_drag_mode = None     # 'rotate' | 'corner_0..3' | None
         self.crop_drag_last = (0, 0)
         self._handle_consuming = False  # True while a handle press is being processed
-        self.bookmarks = {} 
+        self.bookmarks = {}
         self.sweep_active = False
         self.space_pressed = False
         self.sweep_theta = 0.0
@@ -4727,12 +4727,11 @@ class RTIViewerPro(ctk.CTk):
         if "Robust PBR (MVS)" in self.engine_settings:
             self.engine_settings["Robust PBR (MVS)"]["gain"] = 0.15
         self.view_mode = tk.StringVar(value="Shading")
-        self.colour_opacity_var = tk.DoubleVar(value=1.0)  # Combined Colour blend opacity 
-        self.render_engine = tk.StringVar(value="Standard PBR") 
+        self.colour_opacity_var = tk.DoubleVar(value=1.0)  # Combined Colour blend opacity
+        self.render_engine = tk.StringVar(value="Standard PBR")
         self.normal_engine = tk.StringVar(value="Linear Least Squares")
-        self.pytorch_pca_var = getattr(self, 'pytorch_pca_var', tk.BooleanVar(value=True)) 
+        self.pytorch_pca_var = getattr(self, 'pytorch_pca_var', tk.BooleanVar(value=True))
         self.depth_engine = tk.StringVar(value="Fast Poisson (FFT)")
-
 
         self.plate_paths = []
         self.requires_data_widgets = []
@@ -5287,7 +5286,8 @@ SAVING & REUSE
                 finally:
                     _running[0] = False
                     try: _btn_train.configure(state="normal", text="▶  Start Training")
-                    except: pass
+                    except Exception:
+                        pass
 
             def _upd(msg, frac):
                 try:
@@ -5295,7 +5295,8 @@ SAVING & REUSE
                     _lbl_loss.configure(text=msg[-80:] if len(msg) > 80 else "")
                     _pb.set(min(1.0, max(0.0, frac)))
                     win.update_idletasks()
-                except: pass
+                except Exception:
+                    pass
 
             _thr.Thread(target=_worker, daemon=True).start()
 
@@ -5394,8 +5395,6 @@ REQUIREMENTS
             "Batch training will begin in the background.\n"
             "This may take 1–6 hours depending on your hardware.\n\n"
             "HELIO will notify you when the master model is ready.")
-
-
 
     def _on_mousewheel(self, event):
         widget = self.winfo_containing(event.x_root, event.y_root)
@@ -5769,7 +5768,7 @@ REQUIREMENTS
                 "  16-Bit PBR Suite          Albedo · Normal · Roughness · Displacement · AO.\n"
                 "  Multi-LOD Package         3 mesh resolutions × OBJ+GLB for archive use.\n"
                 "  3D Print Export           Watertight STL/OBJ with solid base.\n"
-                
+
                 "WEB & GIS\n\n"
                 "  WebRTI (PTM)            Browser interactive relighting viewer.\n"
                 "  DeepZoom                Gigapixel OpenSeadragon zoomable viewer.\n"
@@ -5835,7 +5834,6 @@ REQUIREMENTS
             ),
           },
         ]
-
 
         win = ctk.CTkToplevel(self)
         win.title("HELIO Pro — Getting Started")
@@ -5945,7 +5943,6 @@ REQUIREMENTS
         win.bind("<Left>",  lambda e: _prev())
         win.bind("<Escape>", lambda e: _close())
         _refresh()
-
 
     def on_closing(self):
         if getattr(self, 'viewer_process', None) and self.viewer_process.is_alive():
@@ -6156,7 +6153,6 @@ REQUIREMENTS
         _log("─" * 60)
         _log("Diagnostic complete.")
 
-
     # ── Debug / diagnostics ────────────────────────────────────────────────
     def _dbg(self, msg, level="INFO"):
         """Write a timestamped diagnostic line.
@@ -6350,7 +6346,6 @@ REQUIREMENTS
         self._sb_state   = ctk.CTkLabel(_status_bar, text="Ready",
             font=("Courier", 10, "bold"), text_color="#2e8b57", anchor="e", width=90)
         self._sb_state.grid(row=0, column=10, sticky="e", padx=(2, 10))
-
 
         if _HELIO_DEBUG:
             dbg_bar = ctk.CTkFrame(self, fg_color="#060d14", height=22, corner_radius=0)
@@ -7060,7 +7055,7 @@ REQUIREMENTS
                 "Az 0=North, 90=East, 180=South, 270=West.\n"
                 "El 5°=grazing (reveals faint surface texture).\n"
                 "El 45°=standard. El 85°=near-overhead (even illumination).\n\n"
-                "Identical to RTI Builder's light position entry.") 
+                "Identical to RTI Builder's light position entry.")
 
         # ══ 4. RENDER MODE (collapsible) ══════════════════════════════════════
         _, f_rend = self._make_collapsible(left, "4. Render Mode", color="#5dade2", start_open=True)
@@ -7636,7 +7631,7 @@ REQUIREMENTS
         self.mag_view = ctk.CTkLabel(self.mag_frame, text="(Hover main image)\n\n(Scroll to resize)\n(Click image to Drop Lock)", width=350, height=350, fg_color="#111")
         self.mag_view.pack(pady=2)
         self.mag_view.bind("<MouseWheel>", self.resize_magnifier); self.mag_view.bind("<Button-4>", self.resize_magnifier); self.mag_view.bind("<Button-5>", self.resize_magnifier)
-        
+
         mag_ctrl = ctk.CTkFrame(self.mag_frame)
         mag_ctrl.pack(pady=2)
         btn_m_minus = ctk.CTkButton(mag_ctrl, text="-", width=30, command=lambda: self.change_mag(0.8)); btn_m_minus.pack(side="left", padx=5); ToolTip(btn_m_minus, "Zoom out the magnifier.")
@@ -7822,7 +7817,8 @@ REQUIREMENTS
         self.ax_graph.set_title("Draw line for profile", color="gray", fontsize=8)
         self.ax_graph.grid(True, color="#333")
         try: self.fig_graph.tight_layout()
-        except: pass
+        except Exception:
+            pass
         self.canvas_graph.draw()
 
         _,f_pre=self._make_collapsible(left,"Material Presets",color="#e67e22",start_open=False)
@@ -8513,13 +8509,13 @@ REQUIREMENTS
             "Strength=1.0 · Smooth=0 · USM=0 · HF=0 · CLAHE=0\n"
             "= no sharpening applied (original normals).")
 
-        def make_3d_slider(key, default): self.shared_state[key].value = default 
+        def make_3d_slider(key, default): self.shared_state[key].value = default
         make_3d_slider('clay_blend', 0.0); make_3d_slider('step', 2); make_3d_slider('height', 150.0); make_3d_slider('mesh_smooth', 0.0); make_3d_slider('edge_trim', 2.0); make_3d_slider('warp_rem', 0.0); make_3d_slider('export_step', 2); make_3d_slider('micro_relief', 0.4)
         # Tone controls + depth slicer — initialise shared_state defaults
         make_3d_slider('viewer_gamma', 1.0); make_3d_slider('viewer_saturation', 1.0)
         make_3d_slider('shadow_lift', 0.0); make_3d_slider('highlight_clip', 1.0)
         make_3d_slider('z_slice_lo', 0.0); make_3d_slider('z_slice_hi', 1.0)
-        
+
         self.flip_x = tk.BooleanVar(value=False); self.flip_y = tk.BooleanVar(value=True); self.flip_z = tk.BooleanVar(value=False)
         self.spin_var = tk.BooleanVar(value=False); self.bg_var = tk.BooleanVar(value=False)
         self.bake_3d_var = tk.BooleanVar(value=False); self.center_origin_var = tk.BooleanVar(value=True)
@@ -8571,7 +8567,7 @@ REQUIREMENTS
             sl = ctk.CTkSlider(parent, from_=start, to=end, command=default_cmd); sl.set(default); sl.pack(pady=2, fill="x", padx=10); ToolTip(sl, tip)
             self._3d_sliders[key] = (sl, start, end, is_int)  # register for preset updates
             return sl
-        
+
         geo_f = ctk.CTkFrame(_exports_body); geo_f.pack(fill="x", pady=2, padx=10)
 
         make_ui_slider(geo_f, "Mesh Density Decimation", 'step', 1, 10, 2, "Controls vertex density of the 3D mesh.\nStep 1 = full resolution (very large file).\nStep 2-4 = good balance of detail and file size.\nStep 5-10 = fast preview, coarse geometry.", True)
@@ -8593,11 +8589,11 @@ REQUIREMENTS
             "Subtracts a front-back linear tilt plane from the depth surface.\n\n"
             "Corrects copystand slope across Y axis. Range +-1 to +-5 deg.\n"
             "Use alongside X-Tilt to fully level the capture.")
-        
+
         # --- NEW CUSTOM CLAY COLOR UI ---
         color_frame = ctk.CTkFrame(geo_f, fg_color="transparent")
         color_frame.pack(fill="x", pady=4)
-        
+
         def _update_clay_color(*args):
             self.shared_state['use_custom_clay'].value = 1 if self.use_custom_clay.get() else 0
             r, g, b_val = {"Red": (0.8, 0.2, 0.2), "Blue": (0.2, 0.4, 0.8), "Green": (0.2, 0.7, 0.3), "Mustard": (0.8, 0.7, 0.2), "Grey": (0.6, 0.6, 0.6)}.get(self.clay_color_name.get(), (0.6, 0.6, 0.6))
@@ -8610,7 +8606,7 @@ REQUIREMENTS
         _opt_clay = ctk.CTkOptionMenu(color_frame, values=["Grey", "Red", "Blue", "Green", "Mustard"], variable=self.clay_color_name, command=_update_clay_color, width=90); _opt_clay.pack(side="right")
         ToolTip(_opt_clay, "Choose the clay colour applied when Custom Clay is enabled.")
         _update_clay_color() # init default
-        
+
         make_ui_slider(geo_f, "Clay Blend (Colour→Clay)", 'clay_blend', 0.0, 1.0, 0.0, "Cross-fades from the photographic vertex colour to the selected clay colour.\n0 = full photo colour. 1 = full clay. 0.5 = equal blend.", False)
 
         flip_f = ctk.CTkFrame(geo_f, fg_color="transparent"); flip_f.pack(fill="x", pady=2)
@@ -8729,7 +8725,7 @@ REQUIREMENTS
         exp_bright_slider.pack(fill="x", pady=2)
         ToolTip(exp_bright_slider, "Gamma brightness applied to vertex colours on export.\n1.0 = original (no change).\n1.2–1.5 = good for Sketchfab which tends to render dark.\n2.0+ = very bright — use for preview only.\n\nIf your model looks dark in Sketchfab, try 1.3–1.5.")
         ctk.CTkLabel(exp_hf_frame, text="<- Darker   1.0=Natural   Brighter ->", font=("Arial", 10), text_color="gray").pack(anchor="w")
-        
+
         ef = ctk.CTkFrame(geo_f, fg_color="transparent"); ef.pack(fill="x", pady=2)
 
         # ── Mesh options ────────────────────────────────────────────────────
@@ -9504,7 +9500,6 @@ REQUIREMENTS
 
         _sfs_frame = ctk.CTkFrame(_relief_scroll, fg_color="#140a00", corner_radius=6)
         _sfs_frame.pack(fill="x", padx=4, pady=(4, 6))
-
 
         # ── SFS header ─────────────────────────────────────────────────────────
         _sfs_hdr = ctk.CTkFrame(_sfs_frame, fg_color="transparent")
@@ -10477,7 +10472,6 @@ REQUIREMENTS
             text=f"{self._rvt_hs_weight_var.get()*100:.0f}%"))
         ToolTip(_rvt_hs_wt_sl, "How strongly the depth HS blends onto each RVT layer. 60%=default.")
 
-
         # ── Tab 3: Metrology ──────────────────────────────────────────────────
         tab_view.tab("Metrology").grid_columnconfigure(0, weight=1); tab_view.tab("Metrology").grid_columnconfigure(1, weight=1)
         _met = tab_view.tab("Metrology")
@@ -10729,10 +10723,11 @@ REQUIREMENTS
                 "Use Curvature for sub-25-micron drypoint marks."),
         })
 
-        for w in self.requires_data_widgets: 
+        for w in self.requires_data_widgets:
             if hasattr(w, 'configure'):
                 try: w.configure(state="disabled")
-                except: pass
+                except Exception:
+                    pass
 
         # ── Welcome wizard — show on first launch (skippable, remembers choice) ─
         self.after(800, self._maybe_show_welcome)
@@ -10740,7 +10735,7 @@ REQUIREMENTS
     # EXPORT FUNCTIONS & EVENT HANDLERS
     # ==============================================================================
     def plot_light_dome_3d(self):
-        if self.current_L_mat is None: 
+        if self.current_L_mat is None:
             messagebox.showinfo("Wait", "Please extract light vectors or process images first.")
             return
         plot_window = tk.Toplevel(self)
@@ -10758,7 +10753,7 @@ REQUIREMENTS
         ly = self.current_L_mat[:, 1]
         lz = self.current_L_mat[:, 2]
         scatter = ax.scatter(lx, ly, lz, c=lz, cmap='plasma', s=50, edgecolors='black', depthshade=True)
-        ax.scatter([0], [0], [0], color='red', s=100, marker='x') 
+        ax.scatter([0], [0], [0], color='red', s=100, marker='x')
         ax.set_xlabel('X'); ax.set_ylabel('Y'); ax.set_zlabel('Z')
         ax.set_xlim([-1, 1]); ax.set_ylim([-1, 1]); ax.set_zlim([0, 1])
         ax.view_init(elev=30, azim=45)
@@ -11312,8 +11307,7 @@ REQUIREMENTS
         self.update_dynamic_sliders()
         for key, slider in self.sliders.items(): slider.set(data["settings"].get(key, slider.get()))
         self._update_dome_indicators(data["lx"], data["ly"], math.sqrt(max(0, 1 - data["lx"]**2 - data["ly"]**2)))
-        self.on_layer_change(data["layer"]); self.refresh_all(); self.bk_var.set("Load Safe State...") 
-
+        self.on_layer_change(data["layer"]); self.refresh_all(); self.bk_var.set("Load Safe State...")
 
     # ─────────────────────────────────────────────────────────────────────────
     # Spin / Flyover animation export
@@ -11436,7 +11430,7 @@ REQUIREMENTS
         if key in {'hs_alt','hs_azi','hs_z','hs_amb','nr_scale','nr_gain','nr_mode',
                    'rk_elevation','rk_n_dirs','rk_usm'}:
             self._slider_dragging = True
-            
+
     def update_export_estimate(self):
         if getattr(self, 'normals_full', None) is None: return
         step = max(1, self.shared_state['export_step'].value)
@@ -11563,7 +11557,7 @@ REQUIREMENTS
                     _, thresh = cv2.threshold(img, max_val * 0.85, 255, cv2.THRESH_BINARY)
                     M = cv2.moments(thresh)
                     hx, hy = (M["m10"] / M["m00"], M["m01"] / M["m00"]) if M["m00"] != 0 else max_loc
-                    nx, ny = (hx - cx) / r, (cy - hy) / r 
+                    nx, ny = (hx - cx) / r, (cy - hy) / r
                     mag_sq = nx**2 + ny**2
                     if mag_sq > 1.0: nx, ny, nz = nx/np.sqrt(mag_sq), ny/np.sqrt(mag_sq), 0.0
                     else: nz = np.sqrt(1.0 - mag_sq)
@@ -11955,9 +11949,9 @@ REQUIREMENTS
             def _update_status(msg):
                 try: self.after(0, lambda m=msg: self._update_status_bar(m))
                 except Exception: pass
-            import torch 
+            import torch
             device = torch.device('cuda' if torch.cuda.is_available() else ('mps' if torch.backends.mps.is_available() else 'cpu'))
-            
+
             from concurrent.futures import ProcessPoolExecutor, as_completed
             _n_imgs = len(self.plate_paths)
             _res_map = {}
@@ -11974,20 +11968,20 @@ REQUIREMENTS
                         self._proc_bar_lbl.configure(
                             text=f"Loading images  {d}/{n}")))
             res = [_res_map[i] for i in range(_n_imgs)]
-            
+
             rgbs, greys = [], []
             for r, g in res:
                 if r is not None: rgbs.append(r); greys.append(g)
             if len(greys) < 3:
                 self.after(0, lambda: messagebox.showerror("Error", "Need at least 3 valid images."))
                 self.after(0, lambda: self.progress.set(0)); return
-                
+
             base_h, base_w = greys[0].shape
             for i in range(1, len(greys)):
-                if greys[i].shape != (base_h, base_w): 
+                if greys[i].shape != (base_h, base_w):
                     greys[i] = cv2.resize(greys[i], (base_w, base_h))
                     rgbs[i] = cv2.resize(rgbs[i], (base_w, base_h))
-                    
+
             self.h, self.w = base_h, base_w
             self._ps_scale = 1.0   # no downsampling — full resolution throughout
             rgb_list, grey_stack = rgbs, np.array(greys)
@@ -12014,7 +12008,7 @@ REQUIREMENTS
             # can translate crop coordinates correctly.
             self._proc_base_w = base_w
             self._proc_base_h = base_h
-            
+
             if self.flatten_illumination_var.get():
                 for i in range(len(grey_stack)):
                     blur = cv2.resize(cv2.GaussianBlur(cv2.resize(grey_stack[i], (0,0), fx=0.05, fy=0.05), (0,0), sigmaX=15), (self.w, self.h))
@@ -12070,7 +12064,7 @@ REQUIREMENTS
             engine_choice = self.normal_engine.get()
             if hasattr(self, 'loaded_lp_matrix') and self.loaded_lp_matrix is not None: self.current_L_mat = self.loaded_lp_matrix
             weight_path = "archival_master_weights.pth" if os.path.exists("archival_master_weights.pth") else ("sdps_weights.pth" if os.path.exists("sdps_weights.pth") else None)
-            
+
             if self.current_L_mat is None and engine_choice not in ["PyTorch Deep PS", "Uncalibrated PCA"]:
                 # Try auto-calibration via TransformerPS
                 _auto_calib_ok = False
@@ -12102,7 +12096,7 @@ REQUIREMENTS
                         f"  • Set Adaptive Light Weight > 0 to down-weight grazing lights."))
                     self.after(0, lambda: self.progress.set(0))
                     return
-                
+
             _alw=float(self.adaptive_light_var.get())
             if _alw>0.0 and self.current_L_mat is not None:
                 _lz=np.clip(self.current_L_mat[:,2],0.,1.)
@@ -12116,7 +12110,7 @@ REQUIREMENTS
                 img_t = torch.tensor(grey_stack, dtype=torch.float32).unsqueeze(0).to(device) / 255.0
                 n_t, l_t = process_in_patches_sota(model, img_t, patch_size=256, overlap=32)
                 self.normals_full = n_t.squeeze(0).permute(1, 2, 0).cpu().numpy()
-                self.current_L_mat = l_t.squeeze(0).cpu().numpy() 
+                self.current_L_mat = l_t.squeeze(0).cpu().numpy()
                 del img_t, n_t, l_t, model
                 if torch.cuda.is_available(): torch.cuda.empty_cache()
             elif engine_choice == "Uncalibrated PCA":
@@ -12291,7 +12285,7 @@ REQUIREMENTS
                 _nlen = np.linalg.norm(_nf, axis=-1, keepdims=True)
                 self.normals_full = _nf / np.maximum(_nlen, 1e-8)
 
-            if self.depth_engine.get() == "PyTorch L1 Edge-Preserving": 
+            if self.depth_engine.get() == "PyTorch L1 Edge-Preserving":
                 self.depth_poisson = pytorch_fast_poisson_integration(self.normals_full)
             elif self.depth_engine.get() == "Simchony DCT":
                 self.depth_poisson=simchony_depth_integration(self.normals_full)
@@ -12386,15 +12380,15 @@ REQUIREMENTS
             dfc_hp = self.depth_fc - blur_fc
             p1_fc, p99_fc = np.percentile(dfc_hp, 1), np.percentile(dfc_hp, 99)
             self.depth_vis_fc = cv2.normalize(np.clip(dfc_hp, p1_fc, p99_fc), None, 0, 1, cv2.NORM_MINMAX)
-            
+
             self.after(0, lambda: self.progress.set(0.7))
-            
+
             flat_gs = grey_stack.reshape(grey_stack.shape[0], -1).astype(np.float32)
             gs_centered = flat_gs - np.mean(flat_gs, axis=0)
             evals, evecs = np.linalg.eigh(np.dot(gs_centered, gs_centered.T) / gs_centered.shape[1])
             evecs = evecs[:, np.argsort(evals)[::-1]]
             pca_comps = np.dot(gs_centered.T, evecs[:, :3])
-            
+
             pca_img = np.zeros((gs_centered.shape[1], 3), dtype=np.uint8)
             for i in range(3):
                 comp = pca_comps[:, i]
@@ -12532,7 +12526,7 @@ REQUIREMENTS
             self.after(0, lambda: self.progress.set(0.9))
             sc = 2500 / max(self.h, self.w); ph, pw = int(self.h * sc), int(self.w * sc)
             def to_proxy(d, ch): return cv2.resize(d.reshape(ch, self.h, self.w).transpose(1,2,0), (pw, ph)).transpose(2,0,1).reshape(ch, -1)
-            
+
             self.ph, self.pw = ph, pw   # stored for update_main_view
             self.normals_proxy = cv2.resize(self.normals_full, (pw, ph))
             self.normals_robust = self.normals_full.copy()
@@ -12557,7 +12551,7 @@ REQUIREMENTS
             self._neg_opn_proxy  = cv2.resize(self._neg_opn_full,  (pw, ph))
             self._slrm_proxy     = cv2.resize(self._slrm_full,     (pw, ph))
             # confidence_proxy removed — mask is generated dynamically in composite_final_image
-            
+
             self.ph, self.pw, self.crop_box = ph, pw, None
             # If this was a crop-override run, normals_full/depth_vis_p etc. are already
             # the exact cropped dimensions — no further slicing should be applied in
@@ -12579,18 +12573,19 @@ REQUIREMENTS
             # Keep old box for backward compat
             self._pretrimmed_crop_box = crop_override if crop_override else None
             if getattr(self, 'sel_rect', None): self.main_view.delete(self.sel_rect)
-            
+
             img_count = len(greys)
             if img_count < 8: msg = "💡 Tip: Select 'PyTorch L1 Edge-Preserving' in Depth Engine."
             elif img_count >= 15: msg = "💡 Tip: The 'Linear Least Squares' engine will be fast and accurate."
             else: msg = "💡 Processing complete. Use the Render Engine to analyze the surface."
             self.lbl_suggestion.configure(text=msg)
             self.lbl_suggestion.pack(pady=(2,2), padx=10)
-            
-            for w in self.requires_data_widgets: 
+
+            for w in self.requires_data_widgets:
                 if hasattr(w, 'configure'):
                     try: w.configure(state="normal")
-                    except: pass
+                    except Exception:
+                        pass
             # All UI calls must go through self.after() since this runs in a background thread
             def _finish_ui():
                 try:
@@ -12788,7 +12783,8 @@ REQUIREMENTS
         # Clear lock crosshair lines
         for line in getattr(self, 'measure_lines', []):
             try: self.main_view.delete(line)
-            except: pass
+            except Exception:
+                pass
         self.measure_lines.clear()
         self.update_magnifier()
 
@@ -12826,7 +12822,7 @@ REQUIREMENTS
             if getattr(self, 'sel_rect', None): self.main_view.delete(self.sel_rect); self.sel_rect = None
             for line in self.measure_lines: self.main_view.delete(line)
             self.measure_lines.clear(); self.update_export_estimate()
-        if self.is_calibrating or self.is_profiling: 
+        if self.is_calibrating or self.is_profiling:
             if not getattr(self,'calib_start',None) and not getattr(self,'profile_start',None):
                 if self.is_calibrating:
                     self.calib_start = (e.x, e.y)
@@ -12848,7 +12844,7 @@ REQUIREMENTS
             self.pan_offset_x += e.x - self.pan_start_x; self.pan_offset_y += e.y - self.pan_start_y
             self.pan_start_x, self.pan_start_y = e.x, e.y; self.update_main_view(); return
         if self.is_calibrating and getattr(self, 'calib_start', None):
-            if getattr(self, 'overlay_id', None): 
+            if getattr(self, 'overlay_id', None):
                 for item in (self.overlay_id if isinstance(self.overlay_id, list) else [self.overlay_id]): self.main_view.delete(item)
             sx, sy = self.calib_start
             rx1, ry1 = (sx - self.view_offset_x) / self.view_width, (sy - self.view_offset_y) / self.view_height
@@ -13338,7 +13334,8 @@ REQUIREMENTS
             ax.yaxis.set_major_formatter(
                 plt.FuncFormatter(lambda v, _: f"{v:.3f}"))
         try: self.fig_graph.tight_layout(pad=0.5)
-        except: pass
+        except Exception:
+            pass
         self.canvas_graph.draw()
 
     def open_terrain_profile_tool(self):
@@ -13566,7 +13563,7 @@ REQUIREMENTS
         Weights at 8 azimuths (0°, 45°, 90°... 315°):
           Cardinal directions  (0°, 90°, 180°, 270°)  : weight 1.0
           Diagonal directions  (45°, 135°, 225°, 315°) : weight 0.707 (1/√2)
-        
+
         After weighting, the sum is normalised by the total weight (5.828).
         This preserves linearity and the result equals a circular average over
         continuously distributed azimuths — more isotropic than simple averaging.
@@ -13770,7 +13767,7 @@ REQUIREMENTS
                     cached = cv2.resize(cached, (w, h), interpolation=cv2.INTER_LANCZOS4)
                 return cached
             return compute_fn()
-        
+
         if use_proxy:
             n_std, n_rob, med, depth_p, depth_fc, ptm = self.normals_proxy, self.normals_robust_proxy, self.median_proxy, self.depth_proxy_p, self.depth_proxy_fc, self.ptm_proxy
             # ALWAYS derive h,w from the actual proxy arrays — caller's self.ph/self.pw
@@ -13823,7 +13820,7 @@ REQUIREMENTS
                 and depth_p is not None):
             depth_p  = depth_p.max()  - depth_p
             depth_fc = depth_fc.max() - depth_fc
-            
+
         res_res = 1.0
         try:
             # Use mm_per_px if set by PPI calibration, else fall back to scale_mm calc
@@ -13833,8 +13830,10 @@ REQUIREMENTS
                 _smv = self.scale_mm.get() if hasattr(self.scale_mm, "get") else "0"
                 if _smv and _smv not in ("", "0.0", "0") and getattr(self, "drawn_scale_px", None):
                     try: res_res = float(_smv) / max(1, self.w)
-                    except: pass
-        except: pass
+                    except Exception:
+                        pass
+        except Exception:
+            pass
 
         if engine == "SLRM (Micro-Relief)":
             def _compute_slrm():
@@ -14239,7 +14238,6 @@ REQUIREMENTS
             ao_raw = nz * prominence
             ao_gamma = np.power(np.clip(ao_raw, 1e-6, 1.0), 1.0 / max(0.1, ao_strength))
             return np.clip(ao_gamma * gain, 0, 1)
-
 
         if engine == "HBAO (Depth-Based)":
             return _use_cache('_hbao_full', '_hbao_proxy',
@@ -14887,11 +14885,11 @@ REQUIREMENTS
                 (rough.astype(float) / 255.0) * settings['rough_opacity'])[..., None]
         else:
             out = np.full((_sh, _sw, 3), 255.0) * shading[..., None]
-            
+
         if settings.get('micro', 0.0) > 0:
             gray = cv2.cvtColor(albedo, cv2.COLOR_RGB2GRAY).astype(float)
             out = np.clip(out + (gray - cv2.GaussianBlur(gray, (0,0), 3))[..., None] * settings['micro'] * 2.0, 0, 255)
-            
+
         out = np.clip((out * settings['bright'] - 128) * (1 + settings['contrast']/100) + 128, 0, 255)
         out = cv2.LUT(out.astype(np.uint8), np.array([((i / 255.0) ** (1.0 / settings['gamma'])) * 255 for i in np.arange(0, 256)]).astype("uint8")) if settings.get('gamma', 1.0) != 1.0 else out.astype(np.uint8)
 
@@ -15200,7 +15198,7 @@ REQUIREMENTS
         x1, y1 = max(0, cx - cw//2), max(0, cy - ch//2)
         x2, y2 = min(self.w, x1 + cw), min(self.h, y1 + ch)
         if x2 <= x1 or y2 <= y1: return
-        
+
         current_eng, v_mode = self.render_engine.get(), self.view_mode.get()
         if v_mode == "Depth Map (Greyscale)": img = Image.fromarray((self.depth_vis_fc[y1:y2, x1:x2] * 255).astype(np.uint8) if "Frankot" in current_eng else (self.depth_vis_p[y1:y2, x1:x2] * 255).astype(np.uint8))
         else: img = Image.fromarray(self.composite_final_image(current_eng, self.get_shading(y2-y1, x2-x1, False, crop_coords=(x1,y1,x2,y2)), y2-y1, x2-x1, False, crop_coords=(x1,y1,x2,y2)))
@@ -15215,7 +15213,8 @@ REQUIREMENTS
             for f in os.listdir(pub_dir):
                 if f.startswith('pubshot_') and f.endswith('.png'):
                     try: os.remove(os.path.join(pub_dir, f))
-                    except: pass
+                    except Exception:
+                        pass
         self.shared_state['screenshot_count'].value = 0
         messagebox.showinfo("Screenshots Cleared", "All 3D viewer publication captures have been cleared.")
 
@@ -15418,7 +15417,7 @@ REQUIREMENTS
             self.viewer_process.start()
         except Exception as e:
             messagebox.showerror("3D Viewer Error", f"Could not launch 3D viewer:\n{e}")
-        
+
     def popout_heatmap_viewer(self):
         """Elevation heatmap 3D viewer — turbo colourmap texture over depth mesh."""
         if getattr(self, 'depth_vis_p', None) is None or getattr(self, 'normals_full', None) is None:
@@ -15724,7 +15723,6 @@ REQUIREMENTS
             self.viewer_process.start()
         except Exception as exc:
             import tkinter.messagebox as _mb; _mb.showerror("3D Viewer Error", f"Inverted Depth viewer failed:\n{exc}")
-
 
     def _v50_get_depth(self, which='poisson'):
         """Return depth map with V50 inversion applied if active.
@@ -16053,7 +16051,6 @@ NOTES
             return arr[y1:y2, x1:x2]
         return arr
 
-
     def export_magnifier_region(self):
         """Export the exact pixel region the magnifier is showing at full resolution."""
         if getattr(self, 'normals_full', None) is None:
@@ -16198,7 +16195,6 @@ NOTES
 
         threading.Thread(target=_work, daemon=True).start()
 
-
     def _export_crop_coords(self):
         """Return (x1,y1,x2,y2,h,w) respecting active crop box only.
         Edge trim is never applied — it is a 3D viewer mesh setting only."""
@@ -16207,7 +16203,6 @@ NOTES
         else:
             x1, y1, x2, y2 = 0, 0, self.w, self.h
         return x1, y1, x2, y2, y2 - y1, x2 - x1
-
 
     def open_forensic_spectral(self):
         """All forensic tools are now inline in the Forensic tab — scroll down to find them."""
@@ -19306,7 +19301,7 @@ NOTES
 
     def export_elevation_heatmap(self):
         p = filedialog.asksaveasfilename(defaultextension=".jpg", initialfile="elevation_heatmap.jpg", filetypes=[("JPEG", "*.jpg"), ("PNG", "*.png")])
-        if p: 
+        if p:
             cv2.imwrite(p, cv2.applyColorMap((np.clip(self.depth_vis_p, 0, 1) * 255).astype(np.uint8), cv2.COLORMAP_TURBO))
             messagebox.showinfo("Success", "Heatmap saved.")
 
@@ -19404,7 +19399,6 @@ NOTES
                   relief='flat',font=('Arial',9)).pack(pady=4,fill='x',padx=4)
         _relight(0.0,0.0)
 
-
     def export_hillshades_32bit(self):
         f = filedialog.askdirectory()
         if not f: return
@@ -19422,10 +19416,11 @@ NOTES
                 "6_sky_view_factor_32f.tif": self.calc_svf(_dvp, self.engine_settings.get("Sky-View Factor (SVF)", self.engine_settings["Standard PBR"])).astype(np.float32)
             }
             if HAS_RASTERIO:
-                res_mm = 1.0 
+                res_mm = 1.0
                 try:
                     if float(self.scale_mm.get()) > 0 and getattr(self, 'drawn_scale_px', None): res_mm = float(self.scale_mm.get()) / self.drawn_scale_px
-                except: pass
+                except Exception:
+                    pass
                 _res_m = res_mm / 1000.0   # kept for metadata only
                 # Pixel size = 1.0 so QGIS RVT search radii work as cell counts,
                 # not as enormous sub-mm fractions.
@@ -20347,7 +20342,8 @@ NOTES
         opt_capture_meta    = self.pub_include_capture_meta_var.get()
         opt_histogram = self.pub_include_histogram_var.get()
         try: dpi_out = int(self.pub_dpi_var.get())
-        except: dpi_out = 300
+        except Exception:
+            dpi_out = 300
 
         # ── Region: determine on main thread ─────────────────────────────────
         use_crop = self.pub_use_crop_var.get() and getattr(self, 'crop_box', None) is not None
@@ -20524,11 +20520,12 @@ NOTES
 
             def gr_gray(eng, f_l=False):
                 try: return cv2.cvtColor(get_render(eng, f_l), cv2.COLOR_RGB2GRAY)
-                except: return np.zeros((self.ph, self.pw), dtype=np.uint8)
+                except Exception:
+                    return np.zeros((self.ph, self.pw), dtype=np.uint8)
             def gr_color(eng, f_l=False):
                 try: return get_render(eng, f_l)
-                except: return np.zeros((self.ph, self.pw, 3), dtype=np.uint8)
-
+                except Exception:
+                    return np.zeros((self.ph, self.pw, 3), dtype=np.uint8)
 
             spec_var_norm = cv2.normalize(_c(self.spec_var), None, 0, 255, cv2.NORM_MINMAX).astype(np.uint8)
 
@@ -20678,7 +20675,8 @@ NOTES
             ax21 = fig.add_subplot(gs[rows, 1:3])
             alb_display = _c(self.albedo_rgb_full).copy()
             try: scale_val = float(self.scale_mm.get())
-            except: scale_val = 0.0
+            except Exception:
+                scale_val = 0.0
             _rh, _rw = alb_display.shape[:2]
             if opt_scale_bar and getattr(self, "calculated_ppi", None):
                 ppi    = self.calculated_ppi
@@ -21229,7 +21227,8 @@ NOTES
 
         def _upd(msg, v):
             try: _slbl.configure(text=msg); _pb.set(v); prog_win.update_idletasks()
-            except: pass
+            except Exception:
+                pass
 
         def _worker():
             try:
@@ -21343,7 +21342,8 @@ NOTES
                 _upd("Done.", 1.0)
                 import time; time.sleep(0.5)
                 try: prog_win.grab_release(); prog_win.destroy()
-                except: pass
+                except Exception:
+                    pass
                 messagebox.showinfo("Specular/Diffuse Separation Complete",
                     f"7 output files saved to:\n{f}\n\n"
                     "sds_diffuse_albedo.png / _16bit.tif\n"
@@ -21354,7 +21354,8 @@ NOTES
             except Exception as e:
                 import traceback
                 try: prog_win.grab_release(); prog_win.destroy()
-                except: pass
+                except Exception:
+                    pass
                 messagebox.showerror("SDS Error", f"{e}\n\n{traceback.format_exc()[-500:]}")
 
         import threading as _thr
@@ -21378,7 +21379,8 @@ NOTES
 
         def _upd(msg, v):
             try: _sl.configure(text=msg); _pb.set(v); prog.update_idletasks()
-            except: pass
+            except Exception:
+                pass
 
         import threading as _thr
         def _worker():
@@ -21464,7 +21466,8 @@ NOTES
                 _upd("Done.", 1.0)
                 import time; time.sleep(0.4)
                 try: prog.grab_release(); prog.destroy()
-                except: pass
+                except Exception:
+                    pass
                 messagebox.showinfo("Combined Renders Saved",
                     f"5 files saved to:\n{f}\n\n"
                     f"  {safe}_normal_map.png\n"
@@ -21475,13 +21478,13 @@ NOTES
             except Exception as e:
                 import traceback
                 try: prog.grab_release(); prog.destroy()
-                except: pass
+                except Exception:
+                    pass
                 messagebox.showerror("Export Error", f"{e}\n{traceback.format_exc()[-400:]}")
 
         _thr.Thread(target=_worker, daemon=True).start()
 
     def export_pbr_suite(self):
-
         """Export a complete 16-bit PBR texture suite.
         Runs on a background thread so the UI stays responsive.
         Shows a live progress dialog. FFT depth integration is only computed
@@ -21801,7 +21804,6 @@ NOTES
                                 "    burr (high gloss adjacent to incised grooves)\n"
                             )
                         _tick("SDS README")
-
 
                 _set_status(f"Done — {done} map(s) saved.", 1.0)
                 import time; time.sleep(0.6)
@@ -23777,8 +23779,6 @@ sl('s_spec','v_spec',v=>specMix=v);
                             _g8(f"{safe}_HS_raw_{_hlbl}.png", _raw_e)
                     _hs_files_written.append(nm)
 
-
-
                 with open(os.path.join(out_dir, f"{safe}_RVT_README.txt"), "w") as rf:
                     rf.write(
                         f"HELIO Pro — RVT Full Relief Visualisation Toolbox\n"
@@ -23852,9 +23852,11 @@ sl('s_spec','v_spec',v=>specMix=v);
         _mm     = getattr(self, '_mm_per_px', None)
         _z_mm   = getattr(self, '_z_mm_per_unit', None)
         try:    _normal_engine = self.normal_engine.get()
-        except: _normal_engine = ""
+        except Exception:
+            _normal_engine = ""
         try:    _depth_engine  = self.depth_engine.get()
-        except: _depth_engine  = ""
+        except Exception:
+            _depth_engine  = ""
 
         prog = ctk.CTkToplevel(self); prog.title("Exporting WebRTI…")
         prog.geometry("420x110"); prog.attributes("-topmost", True)
@@ -23962,7 +23964,6 @@ sl('s_spec','v_spec',v=>specMix=v);
 
         import threading
         threading.Thread(target=_work, daemon=True).start()
-
 
     def export_stl_3dprint(self, solid_block=False):
         """Export a watertight 3D-print-ready STL using direct binary write.
@@ -24239,7 +24240,6 @@ sl('s_spec','v_spec',v=>specMix=v);
         import threading
         threading.Thread(target=_build, daemon=True).start()
 
-
     def _export_3d(self, file_format):
         try: import trimesh
         except ImportError: messagebox.showerror("Error", "pip install trimesh"); return
@@ -24284,7 +24284,6 @@ sl('s_spec','v_spec',v=>specMix=v);
         if self.sketchfab_var.get() and file_format != "point":
             export_dir = os.path.join(os.path.dirname(filepath), f"{os.path.splitext(os.path.basename(filepath))[0]}_PBR_Package")
             os.makedirs(export_dir, exist_ok=True); filepath = os.path.join(export_dir, os.path.basename(filepath))
-            
 
         import threading
         def _do_export():
@@ -24293,10 +24292,10 @@ sl('s_spec','v_spec',v=>specMix=v);
             fx, fy, fz = self.shared_state['fx'].value, self.shared_state['fy'].value, self.shared_state['fz'].value
             trim_pct = self.shared_state['edge_trim'].value / 100.0
             micro = self.shared_state['micro_relief'].value
-    
+
             x1, y1, x2, y2 = self.crop_box if getattr(self, 'crop_box', None) else (max(0, int(self.w * trim_pct)), max(0, int(self.h * trim_pct)), self.w - max(0, int(self.w * trim_pct)), self.h - max(0, int(self.h * trim_pct)))
             albedo = self.albedo_rgb_full[y1:y2, x1:x2]
-    
+
             # --- Depth pipeline ---------------------------------------------------
             hf_cutoff = float(self.export_hf_var.get()) if getattr(self, 'export_hf_var', None) else 0.05
             amp       = float(self.export_amp_var.get()) if getattr(self, 'export_amp_var', None) else 1.0
@@ -24304,16 +24303,16 @@ sl('s_spec','v_spec',v=>specMix=v);
             warp_rem  = self.shared_state['warp_rem'].value
             sb        = max(0.0, min(1.0, self.shared_state['shape_blend'].value))
             hp_sigma  = self.shared_state['hp_sigma'].value
-    
+
             use_hd    = getattr(self, 'hd_mesh_var', type('',(),{'get':lambda s:False})()).get()
-    
+
             if use_hd:
                 # ── HIGH-DETAIL PATH: FC integration from PS normals ──────────────
                 # Bypasses depth_vis_p entirely — uses raw PS surface orientation.
                 # Retains carved lines, lettering, fine relief that Poisson loses.
                 n_crop = self.normals_full[y1:y2, x1:x2].astype(np.float32)
                 sh, sw = n_crop.shape[:2]
-    
+
                 # ── Spike prevention ──────────────────────────────────────────────
                 # 1. Clamp Nz to min 0.15 (not 0.001!) — dividing by near-zero Nz
                 #    turns noise/near-vertical surface normals into gradient spikes
@@ -24327,19 +24326,19 @@ sl('s_spec','v_spec',v=>specMix=v);
                 ny_sm = cv2.GaussianBlur(n_crop[..., 1], (0, 0), sigmaX=1.5)
                 p_fc  = np.clip(-nx_sm / nz_c, -5.0, 5.0)
                 q_fc  = np.clip(-ny_sm / nz_c, -5.0, 5.0)
-    
+
                 u_f, v_f = np.meshgrid(np.fft.fftfreq(sw), np.fft.fftfreq(sh))
                 denom_f  = u_f**2 + v_f**2; denom_f[0, 0] = 1.0
                 Z_hat    = (-1j*u_f*np.fft.fft2(p_fc) - 1j*v_f*np.fft.fft2(q_fc)) / (denom_f + 1e-10)
                 Z_hat[0, 0] = 0.0
                 depth_fc = np.real(np.fft.ifft2(Z_hat)).astype(np.float32)
-    
+
                 # Post-integration: clip extreme outlier voxels (residual spikes)
                 _p1_fc, _p99_fc = np.percentile(depth_fc, 1), np.percentile(depth_fc, 99)
                 _range_fc = _p99_fc - _p1_fc
                 depth_fc  = np.clip(depth_fc, _p1_fc - _range_fc * 0.5,
                                                _p99_fc + _range_fc * 0.5)
-    
+
                 # Remove macro warp with user-controlled sigma
                 _hd_warp_pct = float(getattr(self, 'hd_warp_var',
                                              type('',(),{'get':lambda s:18.0})()).get()) / 100.0
@@ -24360,17 +24359,17 @@ sl('s_spec','v_spec',v=>specMix=v);
                 if sb > 0.1:
                     _prog_sigma = max(3.0, sb * 0.40 * math.sqrt(sh**2 + sw**2))
                     base = base - cv2.GaussianBlur(base, (0, 0), _prog_sigma)
-    
+
             # Optional HF amplification (applies to both paths)
             if amp != 1.0:
                 sigma_hf = max(2.0, hf_cutoff * math.sqrt(sh * sh + sw * sw))
                 hf_layer = base - cv2.GaussianBlur(base, (0, 0), sigma_hf)
                 base = base + hf_layer * (amp - 1.0)
-    
+
             rng = base.max() - base.min()
             raw_depth = ((base - base.min()) / rng).astype(np.float32) if rng > 1e-9 else np.zeros_like(base)
             h, w = raw_depth.shape
-    
+
             # 4. Decimate then apply remaining viewer filters (hp, smooth, warp_rem, micro)
             y_s, x_s = np.mgrid[0:h:step, 0:w:step]
             grid_h, grid_w = len(y_s[:,0]), len(x_s[0,:])
@@ -24385,16 +24384,16 @@ sl('s_spec','v_spec',v=>specMix=v);
             if micro > 0:
                 base_lf = cv2.GaussianBlur(z_raw, (0, 0), max(grid_h, grid_w) * 0.05)
                 z_raw = base_lf + (z_raw - base_lf) * (1.0 + micro)
-    
+
             verts_top = np.column_stack((
                 ((x_s - w/2) * fx).flatten(),
                 ((y_s - h/2) * fy).flatten(),   # fy=-1 by default → Y-axis flipped correctly
                 ((z_raw * fz * height) - (height / 2)).flatten()
             )).astype(np.float32)
-    
+
             if self.center_origin_var.get():
                 verts_top[:, 0] -= np.mean(verts_top[:, 0]); verts_top[:, 1] -= np.mean(verts_top[:, 1]); verts_top[:, 2] -= np.mean(verts_top[:, 2])
-    
+
             if len(albedo.shape) == 2: albedo = np.stack((albedo,)*3, axis=-1)
             # Apply export brightness gamma correction — compensates for Sketchfab/external
             # renderers that tend to render vertex-colored models too dark.
@@ -24410,7 +24409,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                 _cf=colors_top_8bit.astype(np.float32)
                 colors_top_8bit=np.clip(
                     _ao_e*(_cf*_ao_m[:,np.newaxis])+(1.-_ao_e)*_cf,0,255).astype(np.uint8)
-    
+
             if file_format == "point": trimesh.points.PointCloud(verts_top, colors=np.column_stack((colors_top_8bit, np.full(len(colors_top_8bit), 255))).astype(np.uint8)).export(filepath)
             else:
                 rr, cc = np.meshgrid(np.arange(grid_h - 1), np.arange(grid_w - 1), indexing='ij')
@@ -24420,13 +24419,13 @@ sl('s_spec','v_spec',v=>specMix=v);
                 # fy=-1 default (Y-flip in shared_state) → fx*fy*fz<0 normally → flip gives +Z face normals
                 if (fx * fy * fz) < 0: faces_top = faces_top[:, [0, 2, 1]]
                 # Confidence masking is a 2D viewport feature only — all faces are exported.
-    
+
                 # ── Generate UV coordinates for the grid mesh ─────────────────────
                 # MUST be defined BEFORE the watertight block which references uv_top.
                 uv_cols = np.tile(np.linspace(0, 1, grid_w), grid_h)
                 uv_rows = np.repeat(np.linspace(0, 1, grid_h), grid_w)
                 uv_top = np.column_stack((uv_cols, uv_rows)).astype(np.float32)
-    
+
                 if self.watertight_var.get():
                     verts_bottom = verts_top.copy(); verts_bottom[:, 2] = np.min(verts_top[:, 2]) - ((np.max(verts_top[:, 2]) - np.min(verts_top[:, 2])) * 0.2 + 2.0)
                     faces_bottom = faces_top[:, [0, 2, 1]] + len(verts_top)
@@ -24436,7 +24435,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     N    = len(verts_top)
                     P    = len(perimeter)
                     flip = (fx * fy * fz) < 0
-    
+
                     # ── Side wall geometry with DEDICATED vertices ────────────────
                     # The root cause of colour bleed on sides: side quads share their
                     # top-edge vertices with verts_top, which carry surface UVs.
@@ -24450,13 +24449,13 @@ sl('s_spec','v_spec',v=>specMix=v);
                     #   [N .. 2N-1]       verts_bottom   (flat base, black/center UVs)
                     #   [2N .. 2N+P-1]    verts_side_top (perimeter clone, black UVs)
                     #   [2N+P .. 2N+2P-1] verts_side_bot (bottom perimeter clone, black UVs)
-    
+
                     verts_side_top = verts_top[perimeter].copy()    # same XYZ as surface edge
                     verts_side_bot = verts_bottom[perimeter].copy() # same XYZ as bottom edge
-    
+
                     base_st = 2 * N          # start index of verts_side_top
                     base_sb = 2 * N + P      # start index of verts_side_bot
-    
+
                     side_faces = []
                     for i in range(P):
                         j = (i + 1) % P
@@ -24466,20 +24465,20 @@ sl('s_spec','v_spec',v=>specMix=v);
                             side_faces.extend([[st0, st1, sb0], [st1, sb1, sb0]])
                         else:
                             side_faces.extend([[st0, sb0, st1], [st1, sb0, sb1]])
-    
+
                     side_arr = np.array(side_faces, dtype=np.int32)
-    
+
                     # ── Combine all geometry ──────────────────────────────────────
                     all_verts  = np.vstack([verts_top, verts_bottom,
                                             verts_side_top, verts_side_bot])
                     all_faces  = np.vstack([faces_top, faces_bottom, side_arr])
-    
+
                     # Vertex colours: surface=photo, bottom/sides=dark
                     colors_black = np.zeros((2 * P, 3), dtype=np.uint8)
                     all_colors = np.vstack([colors_top_8bit,
                                             np.full_like(colors_top_8bit, 30),
                                             colors_black])
-    
+
                     # ── UV mapping ────────────────────────────────────────────────
                     _black_sides   = getattr(self, 'black_sides_var', None)
                     _black_sides_on = _black_sides.get() if _black_sides else True
@@ -24488,13 +24487,13 @@ sl('s_spec','v_spec',v=>specMix=v);
                     # Use 40% of patch size as a safe margin so bilinear sampling stays black.
                     _bc = 0.002   # UV coord inside black patch at texture (0,0)
                     _cc = 0.5     # UV coord sampling centre of texture
-    
+
                     uv_bottom_arr    = np.full((N, 2), _bc if _black_sides_on else _cc, dtype=np.float32)
                     uv_side_top_arr  = np.full((P, 2), _bc if _black_sides_on else _cc, dtype=np.float32)
                     uv_side_bot_arr  = np.full((P, 2), _bc if _black_sides_on else _cc, dtype=np.float32)
                     all_uvs = np.vstack([uv_top, uv_bottom_arr,
                                          uv_side_top_arr, uv_side_bot_arr])
-    
+
                     verts_final  = all_verts
                     faces_final  = all_faces
                     colors_final = all_colors
@@ -24504,7 +24503,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     verts_final, faces_final, colors_final = verts_top, faces_top, colors_top_8bit
                     _n_top_verts = len(verts_top)
                     _all_uvs = uv_top
-    
+
                 # Use PHOTOMETRIC STEREO normals for vertex shading — exactly as the viewer
                 # does (n_grid = normal_map[y1:y2:st, x1:x2:st]). Depth-gradient normals
                 # encode the dark patch depression directly; PS normals do not — the viewer
@@ -24529,7 +24528,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                 nlen = np.linalg.norm(n_grid, axis=-1, keepdims=True)
                 nlen = np.where(nlen < 1e-9, 1.0, nlen)
                 vertex_normals_top = (n_grid / nlen).reshape(-1, 3).astype(np.float32)
-    
+
                 # ── Build the albedo texture image at grid resolution ─────────────
                 # This is the actual photograph/render decimated to match the vertex grid.
                 # Used for GLB texture embedding; also saved as companion PNG for OBJ.
@@ -24548,7 +24547,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     _patch_sz = max(4, _alb_patched.shape[0] // 64)
                     _alb_patched[:_patch_sz, :_patch_sz] = 0
                     albedo_texture_img = Image.fromarray(_alb_patched)
-    
+
                 # ── Build the normal map texture for embedding ────────────────────
                 # Tangent-space normal map: R=+X, G=+Y(up), B=+Z
                 # For GLTF embedded normal maps with our UV layout (V=0 at top, V=1 at bottom),
@@ -24565,10 +24564,10 @@ sl('s_spec','v_spec',v=>specMix=v);
                     nm_rgb_separate = nm_rgb_separate.copy()
                     nm_rgb_separate[..., 1] = 255 - nm_rgb_separate[..., 1]
                 normal_texture_img = Image.fromarray(nm_rgb_embedded)
-    
+
                 # ── Build mesh — GLB gets UV+texture, OBJ gets vertex colours ─────
                 is_glb = filepath.lower().endswith('.glb') or filepath.lower().endswith('.gltf')
-    
+
                 # Vertex normals for all vertices (top gets PS normals, bottom/sides get auto)
                 vn_flat = np.array([0., 0., -1.], dtype=np.float32)
                 if self.watertight_var.get():
@@ -24576,7 +24575,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     all_vnormals = np.vstack([vertex_normals_top, n_bottom])
                 else:
                     all_vnormals = vertex_normals_top
-    
+
                 if is_glb:
                     try:
                         pbr_mat = trimesh.visual.material.PBRMaterial(
@@ -24610,16 +24609,16 @@ sl('s_spec','v_spec',v=>specMix=v);
                         vertex_normals=all_vnormals[:len(verts_final)],
                         vertex_colors=np.column_stack((colors_final, np.full(len(colors_final), 255))).astype(np.uint8),
                         process=False)
-    
+
                 mesh_final.export(filepath)
-    
+
                 # ── Post-process GLB to set correct PBR material ──────────────────
                 # This fixes the Sketchfab darkness issue by setting metallic=0,
                 # roughness=0.65, doubleSided=True in the GLTF JSON without
                 # touching vertex colours or geometry.
                 if filepath.lower().endswith('.glb') or filepath.lower().endswith('.gltf'):
                     _fix_glb_material(filepath, metallic=0.0, roughness=0.65, double_sided=True)
-    
+
                 # ── Write UV-mapped OBJ with MTL companion for Sketchfab ─────────
                 if filepath.lower().endswith('.obj') and self.vtx_color_var.get():
                     try:
@@ -24668,7 +24667,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                             _of.write(_fbuf.getvalue())
                     except Exception as _obj_err:
                         print(f"[HELIO Pro] OBJ UV rewrite warning: {_obj_err}")
-    
+
             try:  # ── Sketchfab PBR textures ──────────────────────────────────
                 if self.sketchfab_var.get() and file_format != "point":
                     base_name  = os.path.splitext(os.path.basename(filepath))[0]
@@ -24676,13 +24675,13 @@ sl('s_spec','v_spec',v=>specMix=v);
                     include_disp = self.pbr_disp_var.get()
                     gamma_encode = self.normal_linear_var.get()  # True → gamma-encode normals for sRGB renderers
                     flip_y       = self.normal_flip_y_var.get()  # True → flip green channel for OpenGL/Sketchfab Y-up
-        
+
                     # ── Helper: gamma-encode a linear [0,255] uint8 image to survive sRGB decode ──
                     def _encode_for_srgb_renderer(nm_uint8_rgb):
                         lf = nm_uint8_rgb.astype(np.float32) / 255.0
                         encoded = np.power(np.clip(lf, 0, 1), 1.0 / 2.2) * 255.0
                         return np.round(encoded).astype(np.uint8)
-        
+
                     # ── 1. Base colour (= texture / albedo — load this into Sketchfab Albedo slot) ──
                     def _tex_resize(img_bgr,res):
                         if res=='Full': return img_bgr
@@ -24694,7 +24693,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     _tr=getattr(self,'tex_res_var',None); _tres=_tr.get() if _tr else 'Full'
                     cv2.imwrite(os.path.join(export_dir, f"{base_name}_baseColor.png"),
                                 _tex_resize(cv2.cvtColor(albedo,cv2.COLOR_RGB2BGR),_tres))
-        
+
                     # ── 2. Normal map (8-bit PNG) ─────────────────────────────────────
                     # Pipeline: encode → flip Y → gamma-encode (each step optional but default ON)
                     # Y-flip: HELIO PS normals are in image-space (Y-down). Sketchfab/OpenGL/Three.js
@@ -24709,7 +24708,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                         nm_8 = _encode_for_srgb_renderer(nm_8)
                     cv2.imwrite(os.path.join(export_dir, f"{base_name}_normal.png"),
                                 _tex_resize(cv2.cvtColor(nm_8,cv2.COLOR_RGB2BGR),_tres))
-        
+
                     # ── 3. Roughness (8-bit, linear — not gamma encoded) ─────────────
                     if self.roughness_full is not None:
                         rough_8 = (self.roughness_full[y1:y2, x1:x2].astype(np.float32)
@@ -24717,7 +24716,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     else:
                         rough_8 = np.full((y2 - y1, x2 - x1), 128, dtype=np.uint8)
                     cv2.imwrite(os.path.join(export_dir, f"{base_name}_roughness.png"), rough_8)
-        
+
                     # ── 4. Specular (8-bit) ───────────────────────────────────────────
                     if self.spec_var is not None:
                         spec_8 = cv2.normalize(self.spec_var[y1:y2, x1:x2], None, 0, 255,
@@ -24725,7 +24724,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     else:
                         spec_8 = np.full((y2 - y1, x2 - x1), 128, dtype=np.uint8)
                     cv2.imwrite(os.path.join(export_dir, f"{base_name}_specular.png"), spec_8)
-    
+
                     # ── 4b. Baked render texture (current engine, full colour) ─────────
                     # Renders the active engine at full resolution and saves it as a PNG.
                     # This captures raking light, Specular Enhancement, HBAO, IQ etc. as
@@ -24749,7 +24748,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                             )
                         except Exception as _re:
                             print(f"[HELIO Pro] Baked render export skipped: {_re}")
-        
+
                     # ── 5. Ambient Occlusion (optional) ──────────────────────────────
                     # Horizon-based approximation from the PS normal map.
                     # Computes local normal deviation from Z-up; crevices (tilted normals) are darker.
@@ -24764,14 +24763,14 @@ sl('s_spec','v_spec',v=>specMix=v);
                         ao_contrast = np.clip(ao - ao_blur * 0.35 + 0.35, 0, 1)
                         ao_8 = (ao_contrast * 255.0).clip(0, 255).astype(np.uint8)
                         cv2.imwrite(os.path.join(export_dir, f"{base_name}_ao.png"), ao_8)
-        
+
                     # ── 6. HP-filtered displacement (optional) ────────────────────────
                     # Reuses raw_depth already computed for the mesh above —
                     # same Frankot-Chellappa + aggressive HP (σ = 35% diagonal) pipeline.
                     if include_disp:
                         cv2.imwrite(os.path.join(export_dir, f"{base_name}_displacement.png"),
                                     (raw_depth * 65535).astype(np.uint16))
-        
+
                     # ── 6b. Elevation heatmap composite (optional) ────────────────────
                     # Generates the SAME composite shown in the ↗ Heatmap 3D viewer:
                     # turbo depth colourmap multiplied by a diffuse hillshade from PS normals,
@@ -24796,7 +24795,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                                 _tex_resize(_comp_bgr, _tres))
                         except Exception as _he:
                             print(f"[HELIO Pro] Heatmap composite export skipped: {_he}")
-    
+
                     # ── 7. Georeferenced 32-bit float depth TIF ───────────────────────
                     depth_geo      = raw_depth.copy()
                     depth_geo_path = os.path.join(export_dir, f"{base_name}_depth32f.tif")
@@ -24815,7 +24814,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                                          description=geo_desc, metadata=None, compression=None)
                     except ImportError:
                         cv2.imwrite(depth_geo_path, depth_geo)
-        
+
                     # ── 8. Companion README ───────────────────────────────────────────
                     with open(os.path.join(export_dir, f"{base_name}_README.txt"), 'w') as rf:
                         _render_eng_name = self.render_engine.get()
@@ -24859,7 +24858,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                             f"  Integration bowl removed. In Blender: Image Texture (Non-Color) →\n"
                             f"  Displacement node. Scale = 0.001–0.05 depending on physical size.\n"
                         )
-        
+
                     # ── 9. OBJ material file ─────────────────────────────────────────
                     mtl_lines = (
                         f"# HELIO Pro — Wavefront MTL\n"
@@ -24902,7 +24901,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                     import cv2 as _cv2_z
                     _use_jpeg  = getattr(self,'sketchfab_jpeg_var',None)
                     _jpeg_mode = bool(_use_jpeg.get()) if _use_jpeg else False
-    
+
                     def _write_obj_sketchfab_zip(
                             _zpath,_bn,_verts,_faces,_uvs,_vnorms,
                             _alb,_nrm,roughness_gray=None,ao_gray=None,
@@ -24980,7 +24979,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                             sfm={'name':_bn,'description':'Photometric Stereo 3D -- HELIO Pro.',
                                  'tags':['photometric-stereo','RTI','cultural-heritage','3D-scan']}
                             zf.writestr('sketchfab.json',_json_z.dumps(sfm,indent=2).encode())
-    
+
                     _zip_path = os.path.join(os.path.dirname(filepath),
                                               f'{base_name}_sketchfab.zip')
                     _alb_bgr  = cv2.cvtColor(albedo, cv2.COLOR_RGB2BGR)
@@ -25029,7 +25028,7 @@ sl('s_spec','v_spec',v=>specMix=v);
                             'Switch to OBJ export to generate the Sketchfab ZIP.')
             messagebox.showinfo('Export Complete',
                 f'Successfully exported 3D model to:\n{filepath}{zip_note}')
-    
+
           except Exception as _te:
             import traceback; traceback.print_exc()
             self.after(0, lambda err=str(_te): (
@@ -25158,7 +25157,7 @@ sl('s_spec','v_spec',v=>specMix=v);
             _web_mesh.export(_web_glb_path)
             # Safety net: post-process GLB to ensure PBR material properties
             _fix_glb_material(_web_glb_path, metallic=0.0, roughness=0.65, double_sided=True)
-            
+
             html_content = """<!DOCTYPE html>
 <html><head><title>HELIO Pro | 3D Surface Viewer</title>
 <style>
@@ -27745,7 +27744,6 @@ document.querySelector("#toolbar button").classList.add("active");
             f"Load your scan images and click 'Load Scans & Process'\n"
             f"— no sphere or VDC calibration needed.")
 
-
         if getattr(self, 'current_L_mat', None) is None: return
         p = filedialog.asksaveasfilename(defaultextension=".csv", initialfile="light_vectors.csv")
         if p:
@@ -28127,7 +28125,6 @@ document.querySelector("#toolbar button").classList.add("active");
         if safe_oid and not base.startswith(safe_oid):
             return f"{safe_oid}_{base}"
         return base
-
 
     def save_session(self):
         obj = (self.object_id_var.get() or "session").replace(" ","_")
@@ -29520,7 +29517,8 @@ document.querySelector("#toolbar button").classList.add("active");
                 rs = [np.sqrt(i**2+j**2) for i in range(ac_norm.shape[0]//2)
                       for j in range(ac_norm.shape[1]//2) if ac_norm[i,j] < thresh]
                 Str = (min(rs)/max(rs)) if rs and max(rs)>0 else 0.0
-            except: Str = 0.0
+            except Exception:
+                Str = 0.0
 
             # Abbott-Firestone (bearing area) curve
             sorted_vals = np.sort(flat)[::-1]
@@ -30812,7 +30810,7 @@ Two-sentence summary for collection management system."""
             if sc < 1.0: nrm_u8 = cv2.resize(nrm_u8, (dw, dh), cv2.INTER_AREA)
             if sc < 1.0: alb    = cv2.resize(alb,    (dw, dh), cv2.INTER_AREA)
 
-            def _b64_png(arr): 
+            def _b64_png(arr):
                 buf = io.BytesIO()
                 _PIL.fromarray(arr).save(buf, "PNG", optimize=False)
                 return base64.b64encode(buf.getvalue()).decode()
@@ -31062,12 +31060,12 @@ function applyT(){{setZL();cv.style.transform='scale('+zoom+') translate('+panX/
 function doZoom(d){{zoom=Math.max(.1,Math.min(20,zoom*Math.pow(1.25,d)));applyT();}}
 function resetView(){{zoom=1;panX=0;panY=0;setLight(315*Math.PI/180,45*Math.PI/180);applyT();}}
 function exportPNG(){{rdr();var a=document.createElement('a');a.download='RTI_export.png';a.href=cv.toDataURL('image/png');a.click();}}
-document.addEventListener('keydown',function(e){{if(e.code==='Space'){{spaceDown=true;e.preventDefault();}}}}); 
-document.addEventListener('keyup',function(e){{if(e.code==='Space'){{spaceDown=false;panDrag=false;}}}}); 
+document.addEventListener('keydown',function(e){{if(e.code==='Space'){{spaceDown=true;e.preventDefault();}}}});
+document.addEventListener('keyup',function(e){{if(e.code==='Space'){{spaceDown=false;panDrag=false;}}}});
 document.getElementById('wrap').addEventListener('wheel',function(e){{e.preventDefault();zoom=Math.max(.1,Math.min(20,zoom*(e.deltaY<0?1.12:1/1.12)));applyT();}},{{passive:false}});
 cv.addEventListener('mousedown',function(e){{if(dDrag)return;if(e.button===1||spaceDown){{panDrag=true;dX=e.clientX;dY=e.clientY;pX0=panX;pY0=panY;e.preventDefault();}}}});
-window.addEventListener('mousemove',function(e){{if(panDrag){{panX=pX0+(e.clientX-dX);panY=pY0+(e.clientY-dY);applyT();}}}}); 
-window.addEventListener('mouseup',function(e){{if(e.button===1||spaceDown)panDrag=false;}}); 
+window.addEventListener('mousemove',function(e){{if(panDrag){{panX=pX0+(e.clientX-dX);panY=pY0+(e.clientY-dY);applyT();}}}});
+window.addEventListener('mouseup',function(e){{if(e.button===1||spaceDown)panDrag=false;}});
 cv.addEventListener('dblclick',resetView);
 window.setMode=setMode;window.setElev=setElev;window.setAz=setAz;
 window.doZoom=doZoom;window.resetView=resetView;window.upd=upd;window.exportPNG=exportPNG;
@@ -32801,7 +32799,8 @@ setPos(wrap.getBoundingClientRect().left+wrap.offsetWidth/2);
                     img = self.composite_final_image(eng, sh, self.h, self.w, False)
                     safe = "".join(c if c.isalnum() or c in " _-" else "_" for c in eng)
                     Image.fromarray(img).save(os.path.join(folder, f"{safe}.png"))
-                except: pass
+                except Exception:
+                    pass
         except Exception as e:
             print(f"export_snapshot_all_views_to error: {e}", file=sys.stderr)
 
@@ -34202,16 +34201,16 @@ HELIO Pro — https://github.com/sjm208/Helio-Pro
         """
         Generate a complete, installable QGIS 3.x Processing plugin that loads
         and blends HELIO-exported GeoTIFFs (hillshades, GIS analysis maps, DEMs).
-        
+
         Outputs a ZIP file ready to install via QGIS Plugin Manager:
           Plugins → Manage and Install Plugins → Install from ZIP
-        
+
         The plugin provides:
           • Load HELIO Hillshades — loads the 6-map hillshade suite as styled layers
           • Load HELIO Analysis Maps — loads Openness/MSRM/Curvature/Slope/SVF suite
           • HELIO Blend Layers — combine any two HELIO layers with configurable weight
           • Apply HELIO Style — assigns research-grade colourmaps per map type
-        
+
         All algorithms appear under Processing → HELIO Pro → [algorithm].
         """
         import zipfile, textwrap
@@ -34644,7 +34643,7 @@ def _write_obj_sketchfab_zip(zip_path, bn,
 
                 ### Load HELIO Analysis Maps
                 Point it at the folder created by HELIO's *GIS Analysis Maps (32-bit)* export.
-                Loads Positive Openness, Negative Openness, MSRM, Curvature, Slope, 
+                Loads Positive Openness, Negative Openness, MSRM, Curvature, Slope,
                 Local Dominance, and Sky-View Factor.
 
                 ### HELIO Blend Layers
@@ -34660,7 +34659,7 @@ def _write_obj_sketchfab_zip(zip_path, bn,
                 ## Recommended QGIS Workflow
 
                 1. Load HELIO Analysis Maps
-                2. Load HELIO Hillshades  
+                2. Load HELIO Hillshades
                 3. Apply HELIO Style to each layer
                 4. Use HELIO Blend Layers to create composite visualisations
                 5. Export via Layout Manager for publication figures
@@ -35454,7 +35453,8 @@ def _write_obj_sketchfab_zip(zip_path, bn,
                     try:
                         _ppi = float(self.drawn_scale_px)/(float(self.scale_mm.get())/25.4)
                         _qlines.append(f"  Calibrated resolution    : {_ppi:.1f} PPI   ({25.4/_ppi*1000:.3f} µm/px)")
-                    except: pass
+                    except Exception:
+                        pass
                 _y0 = 0.90
                 for _ql in _qlines:
                     ax_st.text(0.01,_y0,_ql,transform=ax_st.transAxes,
@@ -36027,7 +36027,8 @@ DOI reference: {meta.get('doi','—')}
                 for k in [k for k in sa if k not in ("ROI",)]:
                     av, bv = sa[k], sb[k]
                     try:    diff = round(float(av)-float(bv), 5)
-                    except: diff = "—"
+                    except Exception:
+                        diff = "—"
                     cw.writerow([k, av, bv, diff, defs.get(k,"")])
                 cw.writerow([])
                 for meta_row in [
@@ -37320,7 +37321,8 @@ function render(){{if(!ready)return;gl.clearColor(.06,.06,.08,1);gl.clear(gl.COL
         _h, _w = self.h, self.w
         _step   = getattr(self, 'mesh_step_var', type('',(),{'get':lambda s:2})()).get()
         try:    _step = int(_step)
-        except: _step = 2
+        except Exception:
+            _step = 2
         _verts  = (_h // max(1,_step)) * (_w // max(1,_step))
         _verts_m = _verts / 1e6
         # Threshold: >10M vertices at selected step = large, warn
@@ -37341,7 +37343,6 @@ function render(){{if(!ready)return;gl.clearColor(.06,.06,.08,1);gl.clear(gl.COL
 
         ctk.CTkLabel(win, text="Physical Reproduction Export \u2014 3D Printing / Elevated Printing",
                      font=("Arial", 12, "bold"), text_color="#ddaa88").pack(pady=(10, 2))
-
 
         # ── Fixed bottom bar — always visible ──────────────────────────────────
         _btn_bar = ctk.CTkFrame(win, fg_color="#1a0a00", height=60)
@@ -37374,7 +37375,6 @@ function render(){{if(!ready)return;gl.clearColor(.06,.06,.08,1);gl.clear(gl.COL
                                           scrollbar_button_color="#5a3a1a",
                                           scrollbar_button_hover_color="#8a5a2a")
         _scroll.pack(fill="both", expand=True, padx=0, pady=0)
-
 
         # \u2500\u2500 Object Type
         tf = ctk.CTkFrame(_scroll, fg_color="#2a1a0a")
@@ -37487,7 +37487,6 @@ function render(){{if(!ready)return;gl.clearColor(.06,.06,.08,1);gl.clear(gl.COL
                          ("GLB",  "Coloured GLB \u2014 albedo-textured, physically scaled")]:
             ctk.CTkRadioButton(ff, text=lbl, variable=fmt_var, value=val,
                                font=("Arial", 10)).pack(anchor="w", padx=14, pady=1)
-
 
         # ── Invert Relief ─────────────────────────────────────────────────────
         inv_frame = ctk.CTkFrame(_scroll, fg_color="#2a0a2a")
@@ -37737,7 +37736,8 @@ function render(){{if(!ready)return;gl.clearColor(.06,.06,.08,1);gl.clear(gl.COL
             elif res_mode == "maximum":  target = max(H_d, W_d)
             else:
                 try:    target = int(custom_res_var.get())
-                except: target = 512
+                except Exception:
+                    target = 512
             target = max(64, min(target, max(H_d, W_d)))
             step = max(1, max(H_d, W_d) // target)
 
@@ -37901,4 +37901,4 @@ if __name__ == '__main__':
     os.system('''/usr/bin/osascript -e 'tell app "Finder" to set frontmost of process "Python" to true' ''')
     app.lift(); app.attributes('-topmost', True); app.after(500, lambda: app.attributes('-topmost', False))
     print("3. Launching Main Viewport...")
-    app.mainloop() 
+    app.mainloop()
